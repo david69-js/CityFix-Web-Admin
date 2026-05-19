@@ -145,32 +145,20 @@ export default function Reports() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="font-semibold text-[#364461] mb-1">Distribución por Estado</h2>
-              <p className="text-xs text-gray-400 mb-4">
-                El porcentaje se calcula sobre el total de reportes en el período seleccionado: <span className="text-[#364461] font-medium">(reportes del estado ÷ total de reportes) × 100</span>
-              </p>
+              <h2 className="font-semibold text-[#364461] mb-4">Distribución por Estado</h2>
               {byStatus.length > 0 ? (
-                <div className="space-y-4">
-                  {byStatus.map((s: any) => {
+                <div className="space-y-3">
+                  {byStatus.map((s: any, idx: number) => {
                     const total = byStatus.reduce((a: number, b: any) => a + (b.total || 0), 0);
                     const pct = total ? ((s.total / total) * 100).toFixed(1) : 0;
-                    const labels: Record<string, { label: string; desc: string }> = {
-                      pendiente: { label: 'Pendiente', desc: 'Reportados y esperando atención' },
-                      'en proceso': { label: 'En Proceso', desc: 'Asignados y siendo atendidos' },
-                      resuelto: { label: 'Resuelto', desc: 'Completados y cerrados' },
-                    };
-                    const info = labels[s.status_name?.toLowerCase()] || { label: s.status_name, desc: '' };
+                    const statusLabels: Record<number, string> = { 1: 'Pendiente', 2: 'En Proceso', 3: 'Resuelto' };
+                    const sid = s.status_id || s.id || idx + 1;
+                    const name = s.status_name || s.name || s.status?.name || statusLabels[sid] || `Estado ${sid}`;
                     return (
-                      <div key={s.status_name}>
+                      <div key={sid}>
                         <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: s.status_color || '#4d686f' }} />
-                            <div>
-                              <span className="text-sm font-medium text-[#364461]">{info.label}</span>
-                              {info.desc && <span className="text-xs text-gray-400 ml-2">{info.desc}</span>}
-                            </div>
-                          </div>
-                          <span className="text-sm font-medium text-[#364461]">{s.total} ({pct}%)</span>
+                          <span className="text-sm font-semibold text-[#364461]">{name}</span>
+                          <span className="text-sm text-gray-500">{s.total} ({pct}%)</span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-6">
                           <div
@@ -181,7 +169,7 @@ export default function Reports() {
                               backgroundColor: s.status_color || '#4d686f',
                             }}
                           >
-                            <span className={`text-xs font-semibold leading-none ${Number(pct) > 25 ? 'text-white' : 'text-[#364461]'}`}>
+                            <span className={`text-xs font-semibold leading-none ${Number(pct) > 25 ? 'text-white' : 'text-gray-600'}`}>
                               {pct}%
                             </span>
                           </div>
