@@ -1,19 +1,20 @@
 import { useMutation } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
-import type { User } from '../types/api';
 
 export function useLogin() {
   const { setToken, setUser } = useAuthStore();
 
   return useMutation({
-    mutationFn: (payload: { email: string; password: string }) =>
-      api.post('/auth/login', payload).then((r) => r.data),
-    onSuccess: (data) => {
+    mutationFn: async (payload: { email: string; password: string }) => {
+      const res = await api.post('/auth/login', payload);
+      const data = res.data;
       const token = data.token || data.access_token;
-      const user: User = data.user || data;
       setToken(token);
-      setUser(user);
+      const me = await api.get('/auth/me');
+      const userData = me.data?.data || me.data;
+      setUser(userData);
+      return data;
     },
   });
 }

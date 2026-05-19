@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import {
   useIssueDetails, useIssueComments, useAddComment, useDeleteComment,
   useUpdateIssueStatus, useAssignWorker, useWorkers,
-  useToggleUpvote,
+  useToggleUpvote, useAdminUpdateIssue,
 } from '../hooks/useIssues';
 import { useAuthStore } from '../store/authStore';
 import StatusBadge from '../components/StatusBadge';
@@ -27,6 +27,7 @@ export default function IssueDetails() {
   const updateStatus = useUpdateIssueStatus();
   const assignWorker = useAssignWorker();
   const toggleUpvote = useToggleUpvote();
+  const updateIssue = useAdminUpdateIssue();
 
   const [comment, setComment] = useState('');
   const [selectedWorker, setSelectedWorker] = useState('');
@@ -269,6 +270,14 @@ export default function IssueDetails() {
                 </div>
               )}
             </dl>
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <button
+                onClick={() => updateIssue.mutate({ id: issueId, is_archived: !issue.is_archived })}
+                className="w-full px-4 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+              >
+                {issue.is_archived ? 'Restaurar reporte' : 'Archivar reporte'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
