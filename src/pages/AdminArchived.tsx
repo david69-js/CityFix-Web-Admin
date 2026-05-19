@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAdminIssues, useAdminUpdateIssue, useDeleteIssue } from '../hooks/useIssues';
+import { useAdminIssues, useArchiveIssue, useDeleteIssue } from '../hooks/useIssues';
 import StatusBadge from '../components/StatusBadge';
 import { Search, RotateCcw, Trash2, Loader2, Calendar, MapPin } from 'lucide-react';
 
