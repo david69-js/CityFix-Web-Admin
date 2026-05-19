@@ -63,7 +63,8 @@ export interface Issue {
   upvotes_count?: number;
   comments_count?: number;
   is_upvoted?: boolean;
-  is_archived?: boolean;
+  is_hidden?: boolean;
+  hidden_reason?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -106,5 +107,6 @@ export interface AdminUpdateIssuePayload {
   address?: string;
   status_id?: number;
   worker_id?: number;
-  is_archived?: boolean;
+  is_hidden?: boolean;
+  hidden_reason?: string;
 }

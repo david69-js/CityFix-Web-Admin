@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAdminIssues, useStatuses, useArchiveIssue } from '../hooks/useIssues';
+import { useAdminIssues, useStatuses, useToggleIssueHidden } from '../hooks/useIssues';
 import StatusBadge from '../components/StatusBadge';
 import { Search, MapPin, MessageSquare, ThumbsUp, Calendar, Loader2, Archive } from 'lucide-react';
 
@@ -8,9 +8,9 @@ export default function Issues() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<number | ''>('');
   const { data: statuses } = useStatuses();
-  const archiveIssue = useArchiveIssue();
+  const toggleHidden = useToggleIssueHidden();
 
-  const filters: Record<string, any> = {};
+  const filters: Record<string, any> = { is_hidden: 0 };
   if (search) filters.search = search;
   if (statusFilter) filters.status_id = statusFilter;
 
@@ -18,11 +18,11 @@ export default function Issues() {
     useAdminIssues(filters);
 
   const allIssues = data?.pages.flatMap((p) => p.data) ?? [];
-  const issues = allIssues.filter((i: any) => !i.is_archived);
+  const issues = allIssues.filter((i: any) => !i.is_hidden);
 
   const handleArchive = (id: number) => {
     if (confirm('¿Archivar este reporte?')) {
-      archiveIssue.mutate({ id, is_archived: true });
+      toggleHidden.mutate({ issueId: id, reason: 'Archivado por administrador' });
     }
   };
 

@@ -1,24 +1,24 @@
 import { useState } from 'react';
-import { useAdminIssues, useArchiveIssue, useDeleteIssue } from '../hooks/useIssues';
+import { useAdminIssues, useToggleIssueHidden, useDeleteIssue } from '../hooks/useIssues';
 import StatusBadge from '../components/StatusBadge';
 import { Search, RotateCcw, Trash2, Loader2, Calendar, MapPin } from 'lucide-react';
 
 export default function AdminArchived() {
   const [search, setSearch] = useState('');
-  const filters: Record<string, any> = {};
+  const filters: Record<string, any> = { is_hidden: 1 };
   if (search) filters.search = search;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useAdminIssues(filters);
 
-  const restoreIssue = useArchiveIssue();
+  const toggleHidden = useToggleIssueHidden();
   const deleteIssue = useDeleteIssue();
 
   const allIssues = data?.pages.flatMap((p) => p.data) ?? [];
-  const issues = allIssues.filter((i: any) => i.is_archived);
+  const issues = allIssues.filter((i: any) => i.is_hidden);
 
   const handleRestore = (id: number) => {
-    restoreIssue.mutate({ id, is_archived: false });
+    toggleHidden.mutate({ issueId: id });
   };
 
   const handleDelete = (id: number) => {
@@ -82,7 +82,7 @@ export default function AdminArchived() {
                 <div className="flex items-center gap-2 ml-4 shrink-0">
                   <button
                     onClick={() => handleRestore(issue.id)}
-                    disabled={restoreIssue.isPending}
+                    disabled={toggleHidden.isPending}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#4d686f] text-white rounded-lg hover:bg-[#3a5258] transition-colors disabled:opacity-50"
                     title="Restaurar"
                   >

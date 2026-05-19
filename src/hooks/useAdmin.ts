@@ -64,7 +64,7 @@ export function useAdminArchivedIssues(params?: Record<string, any>) {
   return useQuery({
     queryKey: ['admin-archived', params],
     queryFn: () =>
-      api.get('/admin/issues', { params: { ...params, is_archived: 1 } }).then((r) => r.data),
+      api.get('/admin/issues', { params: { ...params, is_hidden: 1 } }).then((r) => r.data),
   });
 }
 

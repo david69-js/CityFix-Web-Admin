@@ -121,20 +121,11 @@ export function useAdminUpdateIssue() {
 export function useToggleIssueHidden() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (issueId: number) =>
-      api.post(`/admin/issues/${issueId}/toggle-hidden`).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['issues'] }),
-  });
-}
-
-export function useArchiveIssue() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, is_archived }: { id: number; is_archived: boolean }) =>
-      api.post(`/admin/issues/${id}`, { is_archived, _method: 'PUT' }).then((r) => r.data),
-    onSuccess: (_, vars) => {
+    mutationFn: ({ issueId, reason }: { issueId: number; reason?: string }) =>
+      api.patch(`/admin/issues/${issueId}/toggle-hidden`, { reason }).then((r) => r.data),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['issues'] });
-      qc.invalidateQueries({ queryKey: ['issue', vars.id] });
+      qc.invalidateQueries({ queryKey: ['issue'] });
     },
   });
 }
