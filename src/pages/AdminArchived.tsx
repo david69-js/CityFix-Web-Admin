@@ -5,16 +5,17 @@ import { Search, RotateCcw, Trash2, Loader2, Calendar, MapPin } from 'lucide-rea
 
 export default function AdminArchived() {
   const [search, setSearch] = useState('');
-  const filters: Record<string, any> = { is_archived: 1 };
+  const filters: Record<string, any> = {};
   if (search) filters.search = search;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useAdminIssues(filters);
 
-  const restoreIssue = useAdminUpdateIssue();
+  const restoreIssue = useArchiveIssue();
   const deleteIssue = useDeleteIssue();
 
-  const issues = data?.pages.flatMap((p) => p.data) ?? [];
+  const allIssues = data?.pages.flatMap((p) => p.data) ?? [];
+  const issues = allIssues.filter((i: any) => i.is_archived);
 
   const handleRestore = (id: number) => {
     restoreIssue.mutate({ id, is_archived: false });
