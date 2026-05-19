@@ -15,6 +15,9 @@ export function useToggleUserActive() {
     mutationFn: (userId: number) =>
       api.patch(`/admin/users/${userId}/toggle-active`).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
+    onError: (err: any) => {
+      alert(err?.response?.data?.message || 'Error al cambiar el estado del usuario');
+    },
   });
 }
 
@@ -24,6 +27,9 @@ export function useAdminUpdateUser() {
     mutationFn: ({ id, ...data }: { id: number } & Record<string, any>) =>
       api.put(`/admin/users/${id}`, data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
+    onError: (err: any) => {
+      alert(err?.response?.data?.message || 'Error al actualizar el usuario');
+    },
   });
 }
 
@@ -71,6 +77,6 @@ export function useAdminArchivedIssues(params?: Record<string, any>) {
 export function useCreateInvitation() {
   return useMutation({
     mutationFn: (data: { code: string; max_uses?: number; expires_at?: string; role_id?: number }) =>
-      api.post('/admin/invitations', data).then((r) => r.data),
+      api.post('/invitation-codes', data).then((r) => r.data),
   });
 }

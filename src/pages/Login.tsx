@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useLogin } from '../hooks/useAuth';
+import axiosBase from 'axios';
 import { Shield, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8888/api';
+
 export default function Login() {
-  const { user, isLoading: authLoading } = useAuthStore();
+  const { user, isLoading: authLoading, setToken, setUser } = useAuthStore();
   const login = useLogin();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,13 +28,34 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setToken(null);
+    setUser(null);
+
     try {
-      await login.mutateAsync({ email, password });
+      const data = await login.mutateAsync({ email, password });
+      const token = data.token || data.access_token;
+      const me = await axiosBase.get(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const userData = me.data?.data || me.data;
+      if (userData.is_active === false) {
+        setError('Tu cuenta ha sido deshabilitada, ponte en contacto con el administrador.');
+        return;
+      }
+      setToken(token);
+      setUser(userData);
     } catch (err: any) {
-      const msg =
+      let msg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
-        (err?.response?.status === 401 ? 'Credenciales inválidas' : 'Error de conexión');
+        err?.message;
+
+      if (msg === 'Unauthorized' || err?.response?.status === 401) {
+        msg = 'Credenciales inválidas o tu cuenta ha sido deshabilitada, ponte en contacto con el administrador.';
+      } else if (!msg) {
+        msg = 'Error de conexión';
+      }
+      
       setError(msg);
     }
   };
