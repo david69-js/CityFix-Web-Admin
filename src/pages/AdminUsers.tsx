@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAdminUsers, useToggleUserActive, useAdminUpdateUser } from '../hooks/useAdmin';
 import { Search, CheckCircle, XCircle, Loader2, Shield, Wrench, User as UserIcon } from 'lucide-react';
 
@@ -10,14 +10,25 @@ const roleLabels: Record<number, { label: string; icon: any; color: string }> = 
 
 export default function AdminUsers() {
   const [search, setSearch] = useState('');
-  const { data, isLoading } = useAdminUsers({ search: search || undefined });
+  const { data, isLoading } = useAdminUsers();
   const toggleActive = useToggleUserActive();
   const updateUser = useAdminUpdateUser();
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ role_id: 0, phone: '' });
 
-  const users = Array.isArray(data) ? data : data?.data ?? [];
+  const allUsers = Array.isArray(data) ? data : data?.data ?? [];
+
+  const users = useMemo(() => {
+    if (!search) return allUsers;
+    const q = search.toLowerCase();
+    return allUsers.filter(
+      (u: any) =>
+        u.first_name?.toLowerCase().includes(q) ||
+        u.last_name?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q)
+    );
+  }, [allUsers, search]);
 
   const startEdit = (u: any) => {
     setEditingId(u.id);
