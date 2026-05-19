@@ -3,7 +3,7 @@ import api from '../api/axios';
 import { useAuthStore } from '../store/authStore';
 
 export function useLogin() {
-  const { setToken, setUser } = useAuthStore();
+  const { setToken, setUser, logout } = useAuthStore();
 
   return useMutation({
     mutationFn: async (payload: { email: string; password: string }) => {
@@ -13,6 +13,10 @@ export function useLogin() {
       setToken(token);
       const me = await api.get('/auth/me');
       const userData = me.data?.data || me.data;
+      if (userData.is_active === false) {
+        logout();
+        throw new Error('Tu cuenta ha sido desactivada. Contacta al administrador.');
+      }
       setUser(userData);
       return data;
     },

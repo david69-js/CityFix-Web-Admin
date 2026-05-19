@@ -47,7 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .get('/auth/me')
         .then((res) => {
           const userData = res.data?.data || res.data;
-          setUser(userData);
+          if (userData.is_active === false) {
+            setToken(null);
+            setUser(null);
+          } else {
+            setUser(userData);
+          }
         })
         .catch(() => {
           setToken(null);

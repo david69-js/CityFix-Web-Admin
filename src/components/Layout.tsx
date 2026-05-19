@@ -13,7 +13,7 @@ export default function Layout() {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user || user.is_active === false) return <Navigate to="/login" replace />;
   if (user.role_id !== 1) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#F1F5F9]">

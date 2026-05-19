@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCreateUser } from '../hooks/useAdmin';
-import { Loader2, Users, Tag, Ticket, Bell, Archive } from 'lucide-react';
+import { Loader2, Users, Tag, Ticket, Bell, Archive, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const quickLinks = [
@@ -50,12 +50,22 @@ function CreateUserForm() {
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', role_id: 3,
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const { mutate: createUser, isPending } = useCreateUser() as any;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess(false);
     createUser(form, {
-      onSuccess: () => setForm({ first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', role_id: 3 }),
+      onSuccess: () => {
+        setForm({ first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', role_id: 3 });
+        setSuccess(true);
+      },
+      onError: (err: any) => {
+        setError(err?.response?.data?.message || err?.response?.data?.error || 'Error al crear usuario');
+      },
     });
   };
 
@@ -98,6 +108,20 @@ function CreateUserForm() {
           ))}
         </div>
       </div>
+      {error && (
+        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-4 py-3 rounded-lg">
+          <CheckCircle2 className="w-4 h-4" />
+          Usuario creado exitosamente
+        </div>
+      )}
+
       <button type="submit" disabled={isPending}
         className="w-full px-4 py-2.5 bg-[#364461] text-white rounded-lg hover:bg-[#2a354e] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >

@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useCreateInvitation } from '../hooks/useAdmin';
-import { Loader2, Ticket, CheckCircle2 } from 'lucide-react';
+import { Loader2, Ticket, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function AdminInvitations() {
   const [form, setForm] = useState({ code: '', max_uses: '', expires_at: '', role_id: 3 });
+  const [error, setError] = useState('');
   const { mutate: createInvitation, isPending, isSuccess } = useCreateInvitation() as any;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     createInvitation(
       {
         code: form.code,
@@ -15,7 +17,12 @@ export default function AdminInvitations() {
         expires_at: form.expires_at || undefined,
         role_id: form.role_id,
       },
-      { onSuccess: () => setForm({ code: '', max_uses: '', expires_at: '', role_id: 3 }) }
+      {
+        onSuccess: () => setForm({ code: '', max_uses: '', expires_at: '', role_id: 3 }),
+        onError: (err: any) => {
+          setError(err?.response?.data?.message || err?.response?.data?.error || 'Error al generar el código');
+        },
+      }
     );
   };
 
@@ -78,6 +85,13 @@ export default function AdminInvitations() {
               ))}
             </div>
           </div>
+
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg">
+              <AlertCircle className="w-4 h-4" />
+              {error}
+            </div>
+          )}
 
           {isSuccess && (
             <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-4 py-3 rounded-lg">
