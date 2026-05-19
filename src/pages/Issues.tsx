@@ -74,7 +74,18 @@ export default function Issues() {
                       <Calendar className="w-3 h-3" />
                       {new Date(issue.created_at).toLocaleDateString()}
                     </span>
-                    <span className="flex items-center gap-1">
+                    <span
+                      className="flex items-center gap-1 cursor-pointer hover:text-[#4d686f] transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const q = issue.latitude && issue.longitude
+                          ? `${issue.latitude},${issue.longitude}`
+                          : issue.address;
+                        if (q) window.open(`https://www.google.com/maps?q=${encodeURIComponent(q)}`, '_blank');
+                      }}
+                      title="Ver en Google Maps"
+                    >
                       <MapPin className="w-3 h-3" />
                       {issue.address || 'Sin ubicación'}
                     </span>

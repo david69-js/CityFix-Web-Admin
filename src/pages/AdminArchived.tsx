@@ -61,7 +61,16 @@ export default function AdminArchived() {
                       {new Date(issue.created_at).toLocaleDateString()}
                     </span>
                     {issue.address && (
-                      <span className="flex items-center gap-1">
+                      <span
+                        className="flex items-center gap-1 cursor-pointer hover:text-[#4d686f] transition-colors"
+                        onClick={() => {
+                          const q = issue.latitude && issue.longitude
+                            ? `${issue.latitude},${issue.longitude}`
+                            : issue.address;
+                          if (q) window.open(`https://www.google.com/maps?q=${encodeURIComponent(q)}`, '_blank');
+                        }}
+                        title="Ver en Google Maps"
+                      >
                         <MapPin className="w-3 h-3" />
                         {issue.address}
                       </span>

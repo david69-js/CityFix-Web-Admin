@@ -32,6 +32,7 @@ export default function IssueDetails() {
   const [comment, setComment] = useState('');
   const [selectedWorker, setSelectedWorker] = useState('');
   const [workerNotes, setWorkerNotes] = useState('');
+  const [assignMsg, setAssignMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -51,12 +52,31 @@ export default function IssueDetails() {
 
   const handleAssign = () => {
     if (!selectedWorker) return;
-    assignWorker.mutate({
-      issue_id: issueId,
-      worker_id: Number(selectedWorker),
-      notes: workerNotes,
-    });
+    setAssignMsg(null);
+    assignWorker.mutate(
+      { issue_id: issueId, worker_id: Number(selectedWorker), notes: workerNotes },
+      {
+        onSuccess: () => {
+          setAssignMsg({ ok: true, text: 'Trabajador asignado correctamente' });
+          setWorkerNotes('');
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message || err?.message || 'Error al asignar trabajador';
+          setAssignMsg({ ok: false, text: msg });
+        },
+      }
+    );
   };
+
+  const workerList = workers
+    ? Array.isArray(workers)
+      ? workers
+      : workers.data
+        ? Array.isArray(workers.data)
+          ? workers.data
+          : []
+        : []
+    : [];
 
   const handleAddComment = () => {
     if (!comment.trim()) return;
@@ -98,7 +118,16 @@ export default function IssueDetails() {
                 <User className="w-4 h-4" />
                 {issue.user.first_name} {issue.user.last_name}
               </span>
-              <span className="flex items-center gap-1">
+              <span
+                className="flex items-center gap-1 cursor-pointer hover:text-[#4d686f] transition-colors"
+                onClick={() => {
+                  const q = issue.latitude && issue.longitude
+                    ? `${issue.latitude},${issue.longitude}`
+                    : issue.address;
+                  if (q) window.open(`https://www.google.com/maps?q=${encodeURIComponent(q)}`, '_blank');
+                }}
+                title="Ver en Google Maps"
+              >
                 <MapPin className="w-4 h-4" />
                 {issue.address || 'Sin ubicación'}
               </span>
@@ -207,12 +236,18 @@ export default function IssueDetails() {
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] bg-white"
               >
                 <option value="">Seleccionar trabajador...</option>
-                {workers?.data?.map((w: any) => (
+                {workerList.map((w: any) => (
                   <option key={w.id} value={w.id}>
-                    {w.first_name} {w.last_name} ({w.email})
+                    {w.first_name} {w.last_name || ''} ({w.email})
                   </option>
                 ))}
               </select>
+              {workerList.length === 0 && !workers && (
+                <p className="text-xs text-gray-400">Cargando trabajadores...</p>
+              )}
+              {workerList.length === 0 && workers && (
+                <p className="text-xs text-amber-600">No hay trabajadores disponibles. Verifica que existan usuarios con rol de trabajador.</p>
+              )}
               <textarea
                 value={workerNotes}
                 onChange={(e) => setWorkerNotes(e.target.value)}
@@ -220,6 +255,11 @@ export default function IssueDetails() {
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] resize-none"
                 rows={3}
               />
+              {assignMsg && (
+                <div className={`flex items-center gap-2 text-sm px-4 py-3 rounded-lg ${assignMsg.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  {assignMsg.ok ? '✓' : '✕'} {assignMsg.text}
+                </div>
+              )}
               <button
                 onClick={handleAssign}
                 disabled={!selectedWorker || assignWorker.isPending}
@@ -264,7 +304,10 @@ export default function IssueDetails() {
               {issue.latitude && issue.longitude && (
                 <div>
                   <dt className="text-gray-400">Coordenadas</dt>
-                  <dd className="font-medium text-xs">
+                  <dd
+                    className="font-medium text-xs text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => window.open(`https://www.google.com/maps?q=${issue.latitude},${issue.longitude}`, '_blank')}
+                  >
                     {issue.latitude}, {issue.longitude}
                   </dd>
                 </div>

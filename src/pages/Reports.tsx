@@ -145,23 +145,46 @@ export default function Reports() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="font-semibold text-[#364461] mb-4">Distribución por Estado</h2>
+              <h2 className="font-semibold text-[#364461] mb-1">Distribución por Estado</h2>
+              <p className="text-xs text-gray-400 mb-4">
+                El porcentaje se calcula sobre el total de reportes en el período seleccionado: <span className="text-[#364461] font-medium">(reportes del estado ÷ total de reportes) × 100</span>
+              </p>
               {byStatus.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {byStatus.map((s: any) => {
                     const total = byStatus.reduce((a: number, b: any) => a + (b.total || 0), 0);
                     const pct = total ? ((s.total / total) * 100).toFixed(1) : 0;
+                    const labels: Record<string, { label: string; desc: string }> = {
+                      pendiente: { label: 'Pendiente', desc: 'Reportados y esperando atención' },
+                      'en proceso': { label: 'En Proceso', desc: 'Asignados y siendo atendidos' },
+                      resuelto: { label: 'Resuelto', desc: 'Completados y cerrados' },
+                    };
+                    const info = labels[s.status_name?.toLowerCase()] || { label: s.status_name, desc: '' };
                     return (
                       <div key={s.status_name}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>{s.status_name}</span>
-                          <span className="font-medium">{s.total} ({pct}%)</span>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: s.status_color || '#4d686f' }} />
+                            <div>
+                              <span className="text-sm font-medium text-[#364461]">{info.label}</span>
+                              {info.desc && <span className="text-xs text-gray-400 ml-2">{info.desc}</span>}
+                            </div>
+                          </div>
+                          <span className="text-sm font-medium text-[#364461]">{s.total} ({pct}%)</span>
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2">
+                        <div className="w-full bg-gray-100 rounded-full h-6">
                           <div
-                            className="h-2 rounded-full transition-all"
-                            style={{ width: `${pct}%`, backgroundColor: s.status_color || '#4d686f' }}
-                          />
+                            className="h-6 rounded-full transition-all flex items-center justify-end px-2"
+                            style={{
+                              width: `${pct}%`,
+                              minWidth: Number(pct) > 0 ? '40px' : '0px',
+                              backgroundColor: s.status_color || '#4d686f',
+                            }}
+                          >
+                            <span className={`text-xs font-semibold leading-none ${Number(pct) > 25 ? 'text-white' : 'text-[#364461]'}`}>
+                              {pct}%
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -214,36 +237,63 @@ export default function Reports() {
               <h2 className="font-semibold text-[#364461] mb-4">Rendimiento de Trabajadores</h2>
               {workers.length > 0 ? (
                 <div className="space-y-4">
-                  {workers.map((w: any) => {
+                  {workers.map((w: any, idx: number) => {
                     const wrk = w.worker || w;
-                    const assigned = w.assigned || 0;
-                    const resolved = w.resolved || 0;
-                    const pct = assigned ? (resolved / assigned) * 100 : 0;
+                    const userId = wrk.id || wrk.worker_id || idx;
+                    const assigned = Number(w.assigned || w.total_assigned || 0);
+                    const resolved = Number(w.resolved || w.resolved_count || 0);
+                    const avgHours = Number(w.avg_resolution_hours || w.avg_hours || 0);
+                    const pct = assigned ? Math.round((resolved / assigned) * 100) : 0;
+                    const initial = (wrk.first_name || wrk.name || '?')[0];
+                    const workerCats = w.categories || [];
                     return (
-                      <div key={wrk.id || wrk.worker_id} className="border border-gray-100 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">
-                            {wrk.first_name} {wrk.last_name || ''}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {resolved}/{assigned} resueltos
-                          </span>
+                      <div key={userId} className="border border-gray-100 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-[#364461] flex items-center justify-center text-white text-sm font-medium shrink-0">
+                            {initial}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-[#364461] truncate">
+                              {wrk.first_name || wrk.name || 'Sin nombre'} {wrk.last_name || ''}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {wrk.email || wrk.worker_email || ''}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-lg font-bold text-[#364461]">{pct}%</p>
+                            <p className="text-xs text-gray-500">{resolved}/{assigned} resueltos</p>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                        <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
                           <div
-                            className="h-1.5 rounded-full bg-[#10B981] transition-all"
-                            style={{ width: `${pct}%` }}
+                            className="h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: pct >= 80 ? '#10B981' : pct >= 40 ? '#e3ba6a' : '#EF4444' }}
                           />
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">
-                          Prom. {w.avg_resolution_hours ? `${Number(w.avg_resolution_hours).toFixed(1)}h` : '-'} por resolución
-                        </p>
+                        <div className="flex items-center justify-between text-xs text-gray-400">
+                          <span>
+                            Prom. resolución: {avgHours ? `${avgHours.toFixed(1)}h` : '-'}
+                          </span>
+                          {workerCats.length > 0 && (
+                            <span className="flex items-center gap-1">
+                              {workerCats.map((c: any, i: number) => (
+                                <span key={i} className="bg-gray-100 px-2 py-0.5 rounded">
+                                  {c.name || c.category_name || c}
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-gray-400 text-center py-4">Sin datos</p>
+                <div className="text-center py-8">
+                  <p className="text-gray-400 mb-1">Sin datos de trabajadores</p>
+                  <p className="text-xs text-gray-300">No hay reportes asignados a trabajadores en este período</p>
+                </div>
               )}
             </div>
           </div>

@@ -86,13 +86,16 @@ export function useAssignWorker() {
   return useMutation({
     mutationFn: ({ issue_id, worker_id, notes }: { issue_id: number; worker_id: number; notes?: string }) =>
       api.post('/assignments', { issue_id, worker_id, notes }).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['issues'] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['issues'] });
+      qc.invalidateQueries({ queryKey: ['issue', vars.issue_id] });
+    },
   });
 }
 
 export function useWorkers(search?: string) {
   return useQuery({
-    queryKey: ['workers', search],
+    queryKey: ['workers', search || 'all'],
     queryFn: () =>
       api.get('/admin/users', { params: { role: 2, search } }).then((r) => r.data),
   });
