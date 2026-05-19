@@ -10,7 +10,21 @@ import {
   FileText, Clock, ThumbsUp, MessageSquare, Loader2, AlertCircle,
 } from 'lucide-react';
 
-function DateRangeFilter({ value, onChange }: { value: { start_date: string; end_date: string }; onChange: (v: any) => void }) {
+const STATUS_LABELS: Record<string, string> = {
+  'pendiente': 'Pendiente',
+  'en proceso': 'En Proceso',
+  'proceso': 'En Proceso',
+  'resuelto': 'Resuelto',
+  'resolved': 'Resuelto',
+};
+
+function resolveStatusName(name: string) {
+  if (!name) return 'Desconocido';
+  const key = name.toLowerCase().trim();
+  return STATUS_LABELS[key] || name;
+}
+
+function DateRangeFilter({ value, onChange }: { value: { from: string; to: string }; onChange: (v: any) => void }) {
   const presets = [
     { label: '7 días', days: 7 },
     { label: '30 días', days: 30 },
@@ -20,7 +34,7 @@ function DateRangeFilter({ value, onChange }: { value: { start_date: string; end
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - days);
-    onChange({ start_date: start.toISOString().split('T')[0], end_date: end.toISOString().split('T')[0] });
+    onChange({ from: start.toISOString().split('T')[0], to: end.toISOString().split('T')[0] });
   };
 
   return (
@@ -39,8 +53,8 @@ function DateRangeFilter({ value, onChange }: { value: { start_date: string; end
         <label className="block text-xs text-gray-500 mb-1">Desde</label>
         <input
           type="date"
-          value={value.start_date}
-          onChange={(e) => onChange({ ...value, start_date: e.target.value })}
+          value={value.from}
+          onChange={(e) => onChange({ ...value, from: e.target.value })}
           className="px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
         />
       </div>
@@ -48,8 +62,8 @@ function DateRangeFilter({ value, onChange }: { value: { start_date: string; end
         <label className="block text-xs text-gray-500 mb-1">Hasta</label>
         <input
           type="date"
-          value={value.end_date}
-          onChange={(e) => onChange({ ...value, end_date: e.target.value })}
+          value={value.to}
+          onChange={(e) => onChange({ ...value, to: e.target.value })}
           className="px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
         />
       </div>
@@ -71,43 +85,36 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
   );
 }
 
-function safeData(d: any) {
-  if (!d) return undefined;
-  return d.data ?? d;
-}
-
 export default function Reports() {
   const [dateRange, setDateRange] = useState(() => {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 30);
     return {
-      start_date: start.toISOString().split('T')[0],
-      end_date: end.toISOString().split('T')[0],
+      from: start.toISOString().split('T')[0],
+      to: end.toISOString().split('T')[0],
     };
   });
 
-  const params = { start_date: dateRange.start_date, end_date: dateRange.end_date };
+  const { data: summaryRaw, isLoading: loadingSummary, isError: summaryError } = useReportSummary({ from: dateRange.from, to: dateRange.to });
+  const { data: categoryRaw, isLoading: loadingCat } = useCategoryReport({ from: dateRange.from, to: dateRange.to });
+  const { data: workerRaw, isLoading: loadingWorker } = useWorkerReport({ from: dateRange.from, to: dateRange.to });
+  const { data: dateRaw, isLoading: loadingDate } = useDateReport({ from: dateRange.from, to: dateRange.to });
 
-  const { data: summaryRaw, isLoading: loadingSummary, isError: summaryError } = useReportSummary(params);
-  const { data: categoryRaw, isLoading: loadingCat } = useCategoryReport(params);
-  const { data: workerRaw, isLoading: loadingWorker } = useWorkerReport(params);
-  const { data: dateRaw, isLoading: loadingDate } = useDateReport(params);
-
-  const summary = safeData(summaryRaw);
-  const categoryData = safeData(categoryRaw);
-  const workerData = safeData(workerRaw);
-  const dateData = safeData(dateRaw);
+  const summary = summaryRaw;
+  const categoryData = categoryRaw;
+  const workerData = workerRaw;
+  const dateData = dateRaw;
 
   const byStatus = summary?.by_status ?? [];
-  const categories = categoryData?.summary ?? (Array.isArray(categoryData) ? categoryData : []);
-  const workers = workerData?.workers ?? (Array.isArray(workerData) ? workerData : []);
-  const daily = dateData?.daily ?? (Array.isArray(dateData) ? dateData : []);
+  const categories = categoryData?.data ?? [];
+  const workers = workerData?.data ?? [];
+  const daily = dateData?.created ?? [];
 
   const isLoading = loadingSummary || loadingCat || loadingWorker || loadingDate;
 
   const totalIssues = summary?.total_issues ?? 0;
-  const avgHours = summary?.avg_resolution_hours ?? 0;
+  const avgHours = summary?.avg_resolution_time_hours ?? 0;
   const totalUpvotes = summary?.total_upvotes ?? 0;
   const totalComments = summary?.total_comments ?? 0;
 
@@ -115,7 +122,7 @@ export default function Reports() {
     <div>
       <h1 className="text-2xl font-bold text-[#364461] mb-2">Reportes y Estadísticas</h1>
       <p className="text-sm text-gray-400 mb-4">
-        {dateRange.start_date} al {dateRange.end_date}
+        {dateRange.from} al {dateRange.to}
       </p>
       <DateRangeFilter value={dateRange} onChange={setDateRange} />
 
@@ -151,11 +158,9 @@ export default function Reports() {
                   {byStatus.map((s: any, idx: number) => {
                     const total = byStatus.reduce((a: number, b: any) => a + (b.total || 0), 0);
                     const pct = total ? ((s.total / total) * 100).toFixed(1) : 0;
-                    const statusLabels: Record<number, string> = { 1: 'Pendiente', 2: 'En Proceso', 3: 'Resuelto' };
-                    const sid = s.status_id || s.id || idx + 1;
-                    const name = s.status_name || s.name || s.status?.name || statusLabels[sid] || `Estado ${sid}`;
+                    const name = resolveStatusName(s.status);
                     return (
-                      <div key={sid}>
+                      <div key={name + idx}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-semibold text-[#364461]">{name}</span>
                           <span className="text-sm text-gray-500">{s.total} ({pct}%)</span>
@@ -166,7 +171,7 @@ export default function Reports() {
                             style={{
                               width: `${pct}%`,
                               minWidth: Number(pct) > 0 ? '40px' : '0px',
-                              backgroundColor: s.status_color || '#4d686f',
+                              backgroundColor: '#4d686f',
                             }}
                           >
                             <span className={`text-xs font-semibold leading-none ${Number(pct) > 25 ? 'text-white' : 'text-gray-600'}`}>
@@ -188,7 +193,7 @@ export default function Reports() {
               {daily.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={daily}>
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v?.slice(5) || ''} />
+                    <XAxis dataKey="period" tick={{ fontSize: 11 }} tickFormatter={(v) => v?.slice(5) || ''} />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Bar dataKey="total" fill="#4d686f" radius={[4, 4, 0, 0]} />
@@ -205,13 +210,13 @@ export default function Reports() {
               <h2 className="font-semibold text-[#364461] mb-4">Categorías</h2>
               {categories.length > 0 ? (
                 <div className="space-y-3">
-                  {categories.map((c: any) => (
-                    <div key={c.category_name} className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{c.category_name}</span>
+                  {categories.map((c: any, idx: number) => (
+                    <div key={c.category || idx} className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{c.category}</span>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span>{c.total} reportes</span>
-                        <span>{c.resolved} resueltos</span>
-                        <span>{c.avg_resolution_hours ? `${Number(c.avg_resolution_hours).toFixed(1)}h` : '-'}</span>
+                        <span>{c.resolved_count} resueltos</span>
+                        <span>{c.avg_resolution_time_hours ? `${Number(c.avg_resolution_time_hours).toFixed(1)}h` : '-'}</span>
                       </div>
                     </div>
                   ))}
@@ -227,13 +232,13 @@ export default function Reports() {
                 <div className="space-y-4">
                   {workers.map((w: any, idx: number) => {
                     const wrk = w.worker || w;
-                    const userId = wrk.id || wrk.worker_id || idx;
-                    const assigned = Number(w.assigned || w.total_assigned || 0);
-                    const resolved = Number(w.resolved || w.resolved_count || 0);
-                    const avgHours = Number(w.avg_resolution_hours || w.avg_hours || 0);
-                    const pct = assigned ? Math.round((resolved / assigned) * 100) : 0;
-                    const initial = (wrk.first_name || wrk.name || '?')[0];
-                    const workerCats = w.categories || [];
+                    const userId = wrk.id || idx;
+                    const assigned = Number(w.total_assigned || 0);
+                    const completed = Number(w.completed_count || w.issues_resolved || 0);
+                    const avgHours = Number(w.avg_completion_time_hours || 0);
+                    const pct = assigned ? Math.round((completed / assigned) * 100) : 0;
+                    const initial = (wrk.first_name || '?')[0];
+                    const cats = w.categories_worked || [];
                     return (
                       <div key={userId} className="border border-gray-100 rounded-lg p-4">
                         <div className="flex items-center gap-3 mb-3">
@@ -242,15 +247,13 @@ export default function Reports() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm text-[#364461] truncate">
-                              {wrk.first_name || wrk.name || 'Sin nombre'} {wrk.last_name || ''}
+                              {wrk.first_name} {wrk.last_name || ''}
                             </p>
-                            <p className="text-xs text-gray-400">
-                              {wrk.email || wrk.worker_email || ''}
-                            </p>
+                            <p className="text-xs text-gray-400">{wrk.email || ''}</p>
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-lg font-bold text-[#364461]">{pct}%</p>
-                            <p className="text-xs text-gray-500">{resolved}/{assigned} resueltos</p>
+                            <p className="text-xs text-gray-500">{completed}/{assigned} completados</p>
                           </div>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-2 mb-2">
@@ -261,13 +264,13 @@ export default function Reports() {
                         </div>
                         <div className="flex items-center justify-between text-xs text-gray-400">
                           <span>
-                            Prom. resolución: {avgHours ? `${avgHours.toFixed(1)}h` : '-'}
+                            Prom. finalización: {avgHours ? `${avgHours.toFixed(1)}h` : '-'}
                           </span>
-                          {workerCats.length > 0 && (
+                          {cats.length > 0 && (
                             <span className="flex items-center gap-1">
-                              {workerCats.map((c: any, i: number) => (
+                              {cats.map((c: any, i: number) => (
                                 <span key={i} className="bg-gray-100 px-2 py-0.5 rounded">
-                                  {c.name || c.category_name || c}
+                                  {c.category || c}
                                 </span>
                               ))}
                             </span>

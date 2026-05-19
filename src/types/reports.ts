@@ -1,41 +1,38 @@
 export interface DateRange {
-  start_date?: string;
-  end_date?: string;
+  from: string;
+  to: string;
 }
 
 export interface StatusSummary {
-  status_name: string;
-  status_color: string;
+  status: string;
   total: number;
 }
 
 export interface CategorySummary {
-  category_name: string;
-  category_icon: string;
+  category: string;
   total: number;
-  resolved: number;
-  avg_resolution_hours: number;
 }
 
-export interface ReportSummary {
+export interface ReportSummary extends DateRange {
   total_issues: number;
-  avg_resolution_hours: number;
+  by_status: StatusSummary[];
+  by_category: CategorySummary[];
   total_upvotes: number;
   total_comments: number;
-  by_status: StatusSummary[];
+  total_workers_assigned: number;
+  avg_resolution_time_hours: number | null;
 }
 
 export interface CategoryReportItem {
-  category_name: string;
-  category_icon: string;
+  category: string;
   total: number;
-  resolved: number;
-  avg_resolution_hours: number;
+  by_status: StatusSummary[];
+  resolved_count: number;
+  avg_resolution_time_hours: number | null;
 }
 
-export interface CategoryReport {
-  summary: CategoryReportItem[];
-  total: number;
+export interface CategoryReport extends DateRange {
+  data: CategoryReportItem[];
 }
 
 export interface WorkerInfo {
@@ -43,63 +40,57 @@ export interface WorkerInfo {
   first_name: string;
   last_name: string;
   email: string;
-  avatar?: string;
 }
 
 export interface WorkerCategory {
-  name: string;
-  count: number;
+  category: string;
+  total: number;
 }
 
 export interface WorkerReportItem {
   worker: WorkerInfo;
-  assigned: number;
-  resolved: number;
-  avg_resolution_hours: number;
-  categories: WorkerCategory[];
+  total_assigned: number;
+  completed_count: number;
+  issues_resolved: number;
+  categories_worked: WorkerCategory[];
+  avg_completion_time_hours: number | null;
 }
 
-export interface WorkerReport {
-  workers: WorkerReportItem[];
-  total: number;
+export interface WorkerReport extends DateRange {
+  data: WorkerReportItem[];
 }
 
 export interface DateDataPoint {
-  date: string;
+  period: string;
   total: number;
 }
 
-export interface DateReport {
-  daily: DateDataPoint[];
-  total: number;
+export interface DateReport extends DateRange {
+  group_by: string;
+  created: DateDataPoint[];
+  resolved: DateDataPoint[];
 }
 
 export interface WorkerResolution {
-  worker_id: number;
-  worker_name: string;
-  avg_hours: number;
-  resolved: number;
+  worker: WorkerInfo;
+  issues_resolved: number;
+  avg_resolution_time_hours: number | null;
 }
 
-export interface ResolutionReport {
-  avg_general: number;
+export interface ResolutionReport extends DateRange {
+  issues_resolved: number;
+  avg_hours: number | null;
+  min_hours: number | null;
+  max_hours: number | null;
   by_worker: WorkerResolution[];
 }
 
-export interface IssueDetail {
-  id: number;
-  title: string;
-  status: string;
-  category: string;
-  created_at: string;
-  resolved_at?: string;
-  resolution_hours?: number;
-}
-
 export interface PaginatedResponse<T> {
-  data: T[];
   current_page: number;
-  last_page: number;
+  data: T[];
   per_page: number;
   total: number;
+  last_page: number;
+  next_page_url: string | null;
+  prev_page_url: string | null;
 }
