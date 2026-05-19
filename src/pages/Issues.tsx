@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAdminIssues, useStatuses, useAdminUpdateIssue } from '../hooks/useIssues';
+import { useAdminIssues, useStatuses, useArchiveIssue } from '../hooks/useIssues';
 import StatusBadge from '../components/StatusBadge';
 import { Search, MapPin, MessageSquare, ThumbsUp, Calendar, Loader2, Archive } from 'lucide-react';
 
@@ -8,16 +8,17 @@ export default function Issues() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<number | ''>('');
   const { data: statuses } = useStatuses();
-  const archiveIssue = useAdminUpdateIssue();
+  const archiveIssue = useArchiveIssue();
 
-  const filters: Record<string, any> = { is_archived: 0 };
+  const filters: Record<string, any> = {};
   if (search) filters.search = search;
   if (statusFilter) filters.status_id = statusFilter;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useAdminIssues(filters);
 
-  const issues = data?.pages.flatMap((p) => p.data) ?? [];
+  const allIssues = data?.pages.flatMap((p) => p.data) ?? [];
+  const issues = allIssues.filter((i: any) => !i.is_archived);
 
   const handleArchive = (id: number) => {
     if (confirm('¿Archivar este reporte?')) {

@@ -127,6 +127,18 @@ export function useToggleIssueHidden() {
   });
 }
 
+export function useArchiveIssue() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, is_archived }: { id: number; is_archived: boolean }) =>
+      api.post(`/admin/issues/${id}`, { is_archived, _method: 'PUT' }).then((r) => r.data),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['issues'] });
+      qc.invalidateQueries({ queryKey: ['issue', vars.id] });
+    },
+  });
+}
+
 export function useDeleteIssue() {
   const qc = useQueryClient();
   return useMutation({
