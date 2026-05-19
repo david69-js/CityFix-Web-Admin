@@ -23,7 +23,7 @@ export default function Login() {
     );
   }
 
-  if (user) return <Navigate to={user.role_id === 1 ? '/reports' : '/'} replace />;
+  if (user) return <Navigate to={Number(user.role_id) === 1 ? '/reports' : '/'} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

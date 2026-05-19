@@ -14,7 +14,7 @@ export default function Layout() {
   }
 
   if (!user || user.is_active === false) return <Navigate to="/login" replace />;
-  if (user.role_id !== 1) {
+  if (Number(user.role_id) !== 1) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#F1F5F9]">
         <p className="text-lg text-red-600">Acceso denegado. Se requieren permisos de administrador.</p>
