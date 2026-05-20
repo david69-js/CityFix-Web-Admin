@@ -12,6 +12,7 @@ import AdminCategories from './pages/AdminCategories';
 import AdminInvitations from './pages/AdminInvitations';
 import AdminCampaign from './pages/AdminCampaign';
 import AdminArchived from './pages/AdminArchived';
+import ReportsPDF from './pages/ReportsPDF';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/issues" element={<Issues />} />
               <Route path="/issues/:id" element={<IssueDetails />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/reports/pdf" element={<ReportsPDF />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/categories" element={<AdminCategories />} />

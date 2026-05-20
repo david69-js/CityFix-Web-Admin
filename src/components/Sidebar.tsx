@@ -1,12 +1,13 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardList, Settings, Users,
-  Tag, Ticket, Archive, Bell, LogOut, Shield,
+  Tag, Ticket, Archive, Bell, LogOut, Shield, FileDown,
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 const navItems = [
   { to: '/reports', label: 'Reportes y Estadísticas', icon: LayoutDashboard },
+  { to: '/reports/pdf', label: 'Reportes PDF', icon: FileDown },
   { to: '/issues', label: 'Reportes Ciudadanos', icon: ClipboardList },
 ];
 
