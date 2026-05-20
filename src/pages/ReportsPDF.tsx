@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   FileText, Grid3X3, Users, Calendar, Clock, List,
   Loader2, Download, AlertCircle, Eye, X,
@@ -84,6 +84,7 @@ export default function ReportsPDF() {
     blobUrl: string;
   } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const previewHtmlRef = useRef('');
 
   if (!user || user.role_id !== 1) {
     return <Navigate to="/reports" replace />;
@@ -101,8 +102,6 @@ export default function ReportsPDF() {
     start.setDate(start.getDate() - days);
     setDateRange({ from: start.toISOString().split('T')[0], to: end.toISOString().split('T')[0] });
   };
-
-  const previewHtmlRef = { current: '' };
 
   const handlePreview = async (report: typeof REPORT_TYPES[0]) => {
     setPreviewLoading(true);
@@ -245,7 +244,7 @@ export default function ReportsPDF() {
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closePreview}>
           <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[95vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
@@ -277,7 +276,7 @@ export default function ReportsPDF() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 bg-gray-100 p-4">
+            <div className="flex-1 bg-gray-100 p-4 min-h-0">
               <iframe
                 src={preview.blobUrl}
                 className="w-full h-full rounded-lg border-0 bg-white shadow-inner"
