@@ -236,44 +236,42 @@ function generateDetailsHtml(data: any, from?: string, to?: string) {
   return buildHtmlTemplate('Detalle del Registro de Incidencias', content, from ?? data?.from, to ?? data?.to);
 }
 
-export async function downloadPdf(
-  endpoint: string,
-  filename: string,
+function generateHtml(reportType: string, data: any, from?: string, to?: string): string {
+  switch (true) {
+    case reportType.includes('summary'):
+      return generateSummaryHtml(data, from, to);
+    case reportType.includes('by-category'):
+      return generateByCategoryHtml(data, from, to);
+    case reportType.includes('by-worker'):
+      return generateByWorkerHtml(data, from, to);
+    case reportType.includes('by-date'):
+      return generateByDateHtml(data, from, to);
+    case reportType.includes('resolution-times'):
+      return generateResolutionTimesHtml(data, from, to);
+    case reportType.includes('details'):
+      return generateDetailsHtml(data, from, to);
+    default:
+      throw new Error('Tipo de reporte no soportado');
+  }
+}
+
+export async function fetchPreviewHtml(
+  reportType: string,
   fetchData: (params?: Record<string, any>) => Promise<any>,
   params?: Record<string, any>,
-) {
+): Promise<string> {
   const data = await fetchData(params);
+  return generateHtml(reportType, data, params?.from, params?.to);
+}
 
-  let html: string;
-  if (endpoint.includes('summary')) {
-    html = generateSummaryHtml(data, params?.from, params?.to);
-  } else if (endpoint.includes('by-category')) {
-    html = generateByCategoryHtml(data, params?.from, params?.to);
-  } else if (endpoint.includes('by-worker')) {
-    html = generateByWorkerHtml(data, params?.from, params?.to);
-  } else if (endpoint.includes('by-date')) {
-    html = generateByDateHtml(data, params?.from, params?.to);
-  } else if (endpoint.includes('resolution-times')) {
-    html = generateResolutionTimesHtml(data, params?.from, params?.to);
-  } else if (endpoint.includes('details')) {
-    html = generateDetailsHtml(data, params?.from, params?.to);
-  } else {
-    throw new Error('Tipo de reporte no soportado');
-  }
-
-  const container = document.createElement('div');
-  container.innerHTML = html;
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.top = '0';
-  document.body.appendChild(container);
-
-  try {
-    await html2pdf()
-      .set({ filename, html2canvas: { scale: 2, useCORS: true }, jsPDF: { format: 'a4', unit: 'mm' } })
-      .from(container)
-      .save();
-  } finally {
-    document.body.removeChild(container);
-  }
+export async function downloadPdf(
+  html: string,
+  filename: string,
+) {
+  await (html2pdf as any)(html, {
+    filename,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { format: 'a4', unit: 'mm', orientation: 'portrait' },
+  }).save();
 }

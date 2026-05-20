@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import {
   FileText, Grid3X3, Users, Calendar, Clock, List,
-  Loader2, Download, AlertCircle, CheckCircle2,
+  Loader2, Download, AlertCircle, Eye, X,
 } from 'lucide-react';
 import { ReportsService } from '../api/reports';
-import { downloadPdf } from '../utils/pdfGenerator';
+import { fetchPreviewHtml, downloadPdf } from '../utils/pdfGenerator';
 import { useAuthStore } from '../store/authStore';
 import { Navigate } from 'react-router-dom';
 
@@ -78,7 +78,12 @@ export default function ReportsPDF() {
   });
   const [generating, setGenerating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+
+  const [preview, setPreview] = useState<{
+    report: typeof REPORT_TYPES[0];
+    blobUrl: string;
+  } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   if (!user || user.role_id !== 1) {
     return <Navigate to="/reports" replace />;
@@ -97,27 +102,48 @@ export default function ReportsPDF() {
     setDateRange({ from: start.toISOString().split('T')[0], to: end.toISOString().split('T')[0] });
   };
 
-  const handleDownload = async (report: typeof REPORT_TYPES[0]) => {
-    setGenerating(report.id);
+  const previewHtmlRef = { current: '' };
+
+  const handlePreview = async (report: typeof REPORT_TYPES[0]) => {
+    setPreviewLoading(true);
     setError(null);
-    setSuccess(null);
     try {
       const params: Record<string, any> = { from: dateRange.from, to: dateRange.to };
-      if (report.id === 'by-date') {
-        params.group_by = 'day';
-      }
-      await downloadPdf(
-        report.id,
-        report.filename(dateRange.from, dateRange.to),
-        report.fetchFn,
-        params,
-      );
-      setSuccess(report.label);
-      setTimeout(() => setSuccess(null), 4000);
+      if (report.id === 'by-date') params.group_by = 'day';
+      const html = await fetchPreviewHtml(report.id, report.fetchFn, params);
+      previewHtmlRef.current = html;
+      const blob = new Blob([html], { type: 'text/html' });
+      setPreview({ report, blobUrl: URL.createObjectURL(blob) });
     } catch (err: any) {
-      setError(err?.message || 'Error al generar el PDF');
+      setError(err?.message || 'Error al generar la vista previa');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleDownloadFromPreview = async () => {
+    if (!preview) return;
+    const html = previewHtmlRef.current;
+    if (!html) return;
+    setGenerating(preview.report.id);
+    setError(null);
+    try {
+      await downloadPdf(html, preview.report.filename(dateRange.from, dateRange.to));
+      previewHtmlRef.current = '';
+      URL.revokeObjectURL(preview.blobUrl);
+      setPreview(null);
+    } catch (err: any) {
+      setError(err?.message || 'Error al descargar el PDF');
     } finally {
       setGenerating(null);
+    }
+  };
+
+  const closePreview = () => {
+    if (preview) {
+      URL.revokeObjectURL(preview.blobUrl);
+      previewHtmlRef.current = '';
+      setPreview(null);
     }
   };
 
@@ -125,7 +151,7 @@ export default function ReportsPDF() {
     <div>
       <h1 className="text-2xl font-bold text-[#364461] mb-2">Exportar Reportes PDF</h1>
       <p className="text-sm text-gray-400 mb-4">
-        Selecciona un tipo de reporte y descárgalo en formato PDF
+        Selecciona un tipo de reporte para previsualizar y descargar en PDF
       </p>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -166,16 +192,9 @@ export default function ReportsPDF() {
         </div>
       )}
 
-      {success && (
-        <div className="flex items-center gap-2 mb-6 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          {success} — PDF generado correctamente
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {REPORT_TYPES.map((report) => {
-          const isLoading = generating === report.id;
+          const isLoading = previewLoading || generating === report.id;
           return (
             <div
               key={report.id}
@@ -193,28 +212,24 @@ export default function ReportsPDF() {
                   <p className="text-xs text-gray-400">{report.description}</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleDownload(report)}
-                disabled={isLoading}
-                className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                style={{
-                  backgroundColor: report.color + '15',
-                  color: report.color,
-                  border: `1.5px solid ${report.color}`,
-                }}
-              >
-                {isLoading ? (
-                  <>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => handlePreview(report)}
+                  disabled={isLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 border"
+                  style={{
+                    borderColor: report.color,
+                    color: report.color,
+                  }}
+                >
+                  {previewLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    Descargar PDF
-                  </>
-                )}
-              </button>
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                  Vista Previa
+                </button>
+              </div>
             </div>
           );
         })}
@@ -222,10 +237,56 @@ export default function ReportsPDF() {
 
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-xs text-blue-700 leading-relaxed">
-          Los reportes se generan automáticamente con los datos más recientes del servidor.
+          Haz clic en "Vista Previa" para ver el contenido del reporte antes de descargarlo.
           El rango de fechas aplica a todos los tipos de reporte.
         </p>
       </div>
+
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closePreview}>
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
+              <div>
+                <h2 className="text-lg font-bold text-[#364461]">{preview.report.label}</h2>
+                <p className="text-xs text-gray-400">
+                  {dateRange.from} al {dateRange.to}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadFromPreview}
+                  disabled={generating === preview.report.id}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: preview.report.color }}
+                >
+                  {generating === preview.report.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={closePreview}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 bg-gray-100 p-4">
+              <iframe
+                src={preview.blobUrl}
+                className="w-full h-full rounded-lg border-0 bg-white shadow-inner"
+                title="Vista previa del reporte"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
