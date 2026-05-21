@@ -85,7 +85,13 @@ export function useAssignWorker() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ issue_id, worker_id, notes }: { issue_id: number; worker_id: number; notes?: string }) =>
-      api.post('/assignments', { issue_id, worker_id, notes }).then((r) => r.data),
+      api.post('/assignments', {
+        issue_id,
+        worker_id,
+        notes,
+        status_id: 1, // Pending
+        assigned_at: new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().split(' ')[0], // YYYY-MM-DD HH:MM:SS
+      }).then((r) => r.data),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['issues'] });
       qc.invalidateQueries({ queryKey: ['issue', vars.issue_id] });
