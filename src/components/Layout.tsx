@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import { Menu, Shield } from 'lucide-react';
 
 export default function Layout() {
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading, logout } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   if (isLoading) {
@@ -19,8 +19,16 @@ export default function Layout() {
   if (!user || user.is_active === false) return <Navigate to="/login" replace />;
   if (Number(user.role_id) !== 1) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#F1F5F9]">
-        <p className="text-lg text-red-600">Acceso denegado. Se requieren permisos de administrador.</p>
+      <div className="h-screen flex flex-col items-center justify-center bg-[#F1F5F9] p-4 text-center">
+        <p className="text-lg text-red-600 font-semibold mb-4">
+          Acceso denegado. Se requieren permisos de administrador.
+        </p>
+        <button
+          onClick={logout}
+          className="px-4 py-2.5 bg-[#364461] text-white rounded-lg hover:bg-[#2a354e] transition-colors font-medium text-sm shadow animate-fade-in"
+        >
+          Volver al inicio de sesión
+        </button>
       </div>
     );
   }
