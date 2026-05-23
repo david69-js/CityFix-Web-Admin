@@ -30,8 +30,8 @@ export default function Issues() {
     <div>
       <h1 className="text-2xl font-bold text-[#364461] mb-6">Reportes Activos</h1>
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -44,7 +44,7 @@ export default function Issues() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value ? Number(e.target.value) : '')}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] bg-white"
+          className="px-4 py-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] bg-white w-full sm:w-auto min-w-[180px]"
         >
           <option value="">Todos los estados</option>
           {statuses?.map((s: any) => (
@@ -66,8 +66,8 @@ export default function Issues() {
               key={issue.id}
               className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between gap-4">
-                <Link to={`/issues/${issue.id}`} className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
+                <Link to={`/issues/${issue.id}`} className="flex-1 min-w-0 w-full">
                   <h3 className="font-medium text-[#364461] truncate">{issue.title}</h3>
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">{issue.description}</p>
                   <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-gray-400">
@@ -100,7 +100,7 @@ export default function Issues() {
                     </span>
                   </div>
                 </Link>
-                <div className="flex flex-col items-end gap-2 shrink-0">
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100 shrink-0">
                   <div className="flex items-center gap-2">
                     <StatusBadge name={issue.status.name} color={issue.status.color} />
                     <button

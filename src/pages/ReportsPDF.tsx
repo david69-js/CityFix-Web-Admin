@@ -154,33 +154,37 @@ export default function ReportsPDF() {
       </p>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        {presets.map((p) => (
-          <button
-            key={p.days}
-            onClick={() => setPreset(p.days)}
-            className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            {p.label}
-          </button>
-        ))}
-        <div className="h-6 w-px bg-gray-300" />
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Desde</label>
-          <input
-            type="date"
-            value={dateRange.from}
-            onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
-          />
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          {presets.map((p) => (
+            <button
+              key={p.days}
+              onClick={() => setPreset(p.days)}
+              className="flex-1 sm:flex-initial px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-center"
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Hasta</label>
-          <input
-            type="date"
-            value={dateRange.to}
-            onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
-          />
+        <div className="hidden sm:block h-6 w-px bg-gray-300" />
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-xs text-gray-500 mb-1">Desde</label>
+            <input
+              type="date"
+              value={dateRange.from}
+              onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
+            />
+          </div>
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-xs text-gray-500 mb-1">Hasta</label>
+            <input
+              type="date"
+              value={dateRange.to}
+              onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
+            />
+          </div>
         </div>
       </div>
 
@@ -247,7 +251,7 @@ export default function ReportsPDF() {
             className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[95vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-b border-gray-200 shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-[#364461]">{preview.report.label}</h2>
                 <p className="text-xs text-gray-400">

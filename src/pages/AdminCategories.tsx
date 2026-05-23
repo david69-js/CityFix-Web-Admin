@@ -83,7 +83,7 @@ export default function AdminCategories() {
             />
             <div>
               <p className="text-sm text-gray-500 mb-2">Seleccionar Icono</p>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 min-[400px]:grid-cols-4 sm:grid-cols-5 gap-2">
                 {ICON_OPTIONS.map((opt) => {
                   const Icon = opt.icon;
                   const selected = catIcon === `fa-${opt.name}`;

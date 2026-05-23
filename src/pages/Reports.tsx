@@ -39,33 +39,37 @@ function DateRangeFilter({ value, onChange }: { value: { from: string; to: strin
 
   return (
     <div className="flex flex-wrap items-center gap-3 mb-6">
-      {presets.map((p) => (
-        <button
-          key={p.days}
-          onClick={() => setPreset(p.days)}
-          className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
-        >
-          {p.label}
-        </button>
-      ))}
-      <div className="h-6 w-px bg-gray-300" />
-      <div>
-        <label className="block text-xs text-gray-500 mb-1">Desde</label>
-        <input
-          type="date"
-          value={value.from}
-          onChange={(e) => onChange({ ...value, from: e.target.value })}
-          className="px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
-        />
+      <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+        {presets.map((p) => (
+          <button
+            key={p.days}
+            onClick={() => setPreset(p.days)}
+            className="flex-1 sm:flex-initial px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-center"
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
-      <div>
-        <label className="block text-xs text-gray-500 mb-1">Hasta</label>
-        <input
-          type="date"
-          value={value.to}
-          onChange={(e) => onChange({ ...value, to: e.target.value })}
-          className="px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
-        />
+      <div className="hidden sm:block h-6 w-px bg-gray-300" />
+      <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-xs text-gray-500 mb-1">Desde</label>
+          <input
+            type="date"
+            value={value.from}
+            onChange={(e) => onChange({ ...value, from: e.target.value })}
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
+          />
+        </div>
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-xs text-gray-500 mb-1">Hasta</label>
+          <input
+            type="date"
+            value={value.to}
+            onChange={(e) => onChange({ ...value, to: e.target.value })}
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-[#364461] text-sm"
+          />
+        </div>
       </div>
     </div>
   );
@@ -137,7 +141,7 @@ export default function Reports() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <StatCard icon={FileText} label="Total Reportes" value={totalIssues} color="#4d686f" />
             <StatCard icon={Clock} label="Prom. Resolución" value={avgHours ? `${Number(avgHours).toFixed(1)}h` : '0h'} color="#e3ba6a" />
             <StatCard icon={ThumbsUp} label="Total Upvotes" value={totalUpvotes} color="#3B82F6" />

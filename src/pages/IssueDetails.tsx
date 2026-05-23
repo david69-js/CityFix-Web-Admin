@@ -99,12 +99,14 @@ export default function IssueDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
               <div>
                 <h1 className="text-xl font-bold text-[#364461]">{issue.title}</h1>
                 <p className="text-sm text-gray-400 mt-1">#{issue.id}</p>
               </div>
-              <StatusBadge name={issue.status.name} color={issue.status.color} />
+              <div className="self-start sm:self-auto">
+                <StatusBadge name={issue.status.name} color={issue.status.color} />
+              </div>
             </div>
 
             <p className="text-gray-600 mb-4">{issue.description || 'Sin descripción'}</p>
@@ -154,7 +156,7 @@ export default function IssueDetails() {
 
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="font-semibold text-[#364461] mb-4">Cambiar Estado</h2>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {[1, 2, 3].map((sid) => (
                 <button
                   key={sid}

@@ -60,8 +60,8 @@ export default function AdminUsers() {
           <Loader2 className="w-8 h-8 animate-spin text-[#364461]" />
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+          <table className="w-full min-w-[800px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">Usuario</th>

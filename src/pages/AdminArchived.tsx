@@ -52,11 +52,11 @@ export default function AdminArchived() {
         <div className="space-y-3">
           {issues.map((issue: any) => (
             <div key={issue.id} className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                <div className="flex-1 min-w-0 w-full">
                   <h3 className="font-medium text-[#364461]">{issue.title}</h3>
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">{issue.description}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                  <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-400">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {new Date(issue.created_at).toLocaleDateString()}
@@ -79,7 +79,7 @@ export default function AdminArchived() {
                     <StatusBadge name={issue.status?.name || 'N/A'} color={issue.status?.color} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2 ml-4 shrink-0">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:ml-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100 shrink-0">
                   <button
                     onClick={() => handleRestore(issue.id)}
                     disabled={toggleHidden.isPending}
